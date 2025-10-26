@@ -1,0 +1,8 @@
+{  // this is just to know which one your working on. backend or frontend look at the top bar
+    "workbench.colorCustomizations": {
+        "titleBar.activeBackground": "#007ACC",
+        "titleBar.activeForeground": "#FFFFFF",
+        "titleBar.inactiveBackground": "#007ACC99",
+        "titleBar.inactiveForeground": "#FFFFFFCC"
+    }
+}
