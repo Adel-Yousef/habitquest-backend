@@ -34,7 +34,7 @@ PROGRESS_STATUS = (
 
 class Progress(models.Model):
     date = models.DateField('Progress date')
-    status = models.CharField(max_length=1, choices=PROGRESS_STATUS, default=PROGRESS_STATUS[0][0])
+    status = models.CharField(max_length=1, choices=PROGRESS_STATUS)
     participation = models.ForeignKey(Participation, on_delete=models.CASCADE, related_name='progress')
 
     def __str__(self):
