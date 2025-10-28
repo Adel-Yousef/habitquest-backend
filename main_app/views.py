@@ -40,3 +40,17 @@ class ParticipationsIndex(APIView):
         except Exception as error:
             return Response({'error': str(error)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+# for the dashboard
+class MyChallenges(APIView):
+    def get(self, request, user_id):
+        queryset = Challenge.objects.filter(created_by_id=user_id)
+        serializer = ChallengeSerializer(queryset,many=True)
+        return Response(serializer.data)
+
+# for the dashboard   
+class MyParticipations(APIView):
+    def get(self, request, user_id):
+        queryset = Participation.objects.filter(user_id=user_id)
+        serializer = ParticipationSerializer(queryset, many=True)
+        return Response(serializer.data)
+    
