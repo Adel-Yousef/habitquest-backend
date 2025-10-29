@@ -58,6 +58,25 @@ class ChallengeDetail(APIView):
             return Response({'message': f'Challenge {challenge_id} has been deleted'}, status=status.HTTP_204_NO_CONTENT)
         except Exception as error:
             return Response({'error': str(error)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+class LeaveChallenge(APIView):
+    def delete(self, request, challenge_id, user_id):
+        try:
+            challenge = get_object_or_404(Challenge, id=challenge_id)
+            user = get_object_or_404(User, id=user_id)
+
+            participation = get_object_or_404(Participation, challenge=challenge, user=user)
+            participation.delete()
+
+            user_participations = Participation.objects.filter(user_id=user_id)
+            challenges_user_has_joined = Challenge.objects.filter(id__in=user_participations.values_list('challenge_id', flat=True))
+            return Response({
+                'message': f'User {user_id} left challenge {challenge_id}',
+                'challenges_user_has_joined': ChallengeSerializer(challenges_user_has_joined, many=True).data
+            }, status=status.HTTP_200_OK)
+        except Exception as error:
+            return Response({'error': str(error)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # for the dashboard
 class MyChallenges(APIView):
