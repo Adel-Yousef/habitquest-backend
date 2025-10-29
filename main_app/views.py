@@ -58,6 +58,26 @@ class ChallengeDetail(APIView):
             return Response({'message': f'Challenge {challenge_id} has been deleted'}, status=status.HTTP_204_NO_CONTENT)
         except Exception as error:
             return Response({'error': str(error)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ParticipationsIndex(APIView):
+    def get(self, request, challenge_id):
+        queryset = Participation.objects.filter(challenge=challenge_id)
+        serializer = ParticipationSerializer(queryset, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request, challenge_id):
+        try:
+            serializer = ParticipationSerializer(data=request.data)
+            
+            if serializer.is_valid():
+                serializer.save()
+                queryset = Participation.objects.filter(challenge=challenge_id)
+                many_serializer = ParticipationSerializer(queryset, many=True)
+                return Response(many_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as error:
+            return Response({'error': str(error)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
 class ParticipationProgress(APIView):

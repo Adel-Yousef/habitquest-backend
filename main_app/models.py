@@ -25,6 +25,7 @@ class Participation(models.Model):
     
     class Meta:
         ordering = ['-join_date']
+        unique_together = ['user', 'challenge']
 
 PROGRESS_STATUS = (
     ('D', 'Done'),
