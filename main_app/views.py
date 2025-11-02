@@ -10,6 +10,21 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 # Create your views here.
+
+class Home(APIView):
+    def get(self, request):
+        content = {'message': 'Welcome to the HqbitQuest API!'}
+        return Response(content)
+    
+    def post(self, request):
+        data = request.data
+        print(request.data)
+        content = {
+            'message': 'Welcome, you just posted to the HabitQuest!',
+            'data': data
+        }
+        return Response(content)
+
 class ChallengeIndex(APIView):
     def get(self, request):
         queryset = Challenge.objects.all()

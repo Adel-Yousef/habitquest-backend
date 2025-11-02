@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import ChallengeIndex, MyParticipations, ParticipationsIndex, MyChallenges, ParticipationProgress, ChallengeDetail, LeaveChallenge
+from .views import ChallengeIndex, MyParticipations, ParticipationsIndex, MyChallenges, ParticipationProgress, ChallengeDetail, LeaveChallenge, Home
 
 
 urlpatterns = [
+    path('', Home.as_view(), name='home'),
     path('challenges/', ChallengeIndex.as_view(), name='challenges_index'),
     path('challenges/<int:challenge_id>/', ChallengeDetail.as_view(), name='challenge_detail'),
     path('challenges/<int:challenge_id>/participations/', ParticipationsIndex.as_view(), name='participations_index'),
