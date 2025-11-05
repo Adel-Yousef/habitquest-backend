@@ -6,6 +6,7 @@ from .models import Challenge, Participation, Progress
 from .serializers import ChallengeSerializer, ParticipationSerializer, ProgressSerializer
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from rest_framework.permissions import (AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly)
 
 User = get_user_model()
 
@@ -26,6 +27,8 @@ class Home(APIView):
         return Response(content)
 
 class ChallengeIndex(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         queryset = Challenge.objects.all()
         serializer = ChallengeSerializer(queryset, many=True)
@@ -36,7 +39,8 @@ class ChallengeIndex(APIView):
             serializer = ChallengeSerializer(data=request.data)
             
             if serializer.is_valid():
-                serializer.save()
+                # so the created_by still the user and doesnt go to null
+                serializer.save(created_by=request.user)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as error:
@@ -76,6 +80,8 @@ class ChallengeDetail(APIView):
 
 
 class ParticipationsIndex(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, challenge_id):
         queryset = Participation.objects.filter(challenge=challenge_id)
         serializer = ParticipationSerializer(queryset, many=True)
@@ -86,7 +92,8 @@ class ParticipationsIndex(APIView):
             serializer = ParticipationSerializer(data=request.data)
             
             if serializer.is_valid():
-                serializer.save()
+                challenge = Challenge.objects.get(id=challenge_id)
+                serializer.save(user=request.user, challenge=challenge)
                 queryset = Participation.objects.filter(challenge=challenge_id)
                 many_serializer = ParticipationSerializer(queryset, many=True)
                 return Response(many_serializer.data, status=status.HTTP_201_CREATED)
@@ -96,6 +103,8 @@ class ParticipationsIndex(APIView):
     
 
 class ParticipationProgress(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, participation_id):
         queryset = Progress.objects.filter(participation=participation_id)
         serializer = ProgressSerializer(queryset, many=True)
@@ -103,9 +112,11 @@ class ParticipationProgress(APIView):
     
     def post(self, request, participation_id):
         try:
+            participation = get_object_or_404(Participation, id=participation_id)
+
             serializer = ProgressSerializer(data=request.data)
             if serializer.is_valid():
-                serializer.save()
+                serializer.save(participation=participation)
                 queryset = Progress.objects.filter(participation=participation_id)
                 many_serializer = ProgressSerializer(queryset, many=True)
                 return Response(many_serializer.data, status=status.HTTP_201_CREATED)
@@ -114,18 +125,19 @@ class ParticipationProgress(APIView):
             return Response({'error': str(error)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class LeaveChallenge(APIView):
-    def delete(self, request, challenge_id, user_id):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, challenge_id):
         try:
             challenge = get_object_or_404(Challenge, id=challenge_id)
-            user = get_object_or_404(User, id=user_id)
 
-            participation = get_object_or_404(Participation, challenge=challenge, user=user)
+            participation = get_object_or_404(Participation, challenge=challenge, user=request.user)
             participation.delete()
 
-            user_participations = Participation.objects.filter(user_id=user_id)
+            user_participations = Participation.objects.filter(user=request.user)
             challenges_user_has_joined = Challenge.objects.filter(id__in=user_participations.values_list('challenge_id', flat=True))
             return Response({
-                'message': f'User {user_id} left challenge {challenge_id}',
+                'message': f'User {request.user.username} left challenge {challenge_id}',
                 'challenges_user_has_joined': ChallengeSerializer(challenges_user_has_joined, many=True).data
             }, status=status.HTTP_200_OK)
         except Exception as error:
@@ -133,16 +145,49 @@ class LeaveChallenge(APIView):
 
 # for the dashboard
 class MyChallenges(APIView):
-    def get(self, request, user_id):
-        queryset = Challenge.objects.filter(created_by_id=user_id)
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        queryset = Challenge.objects.filter(created_by=request.user)
         serializer = ChallengeSerializer(queryset,many=True)
         return Response(serializer.data)
 
 # for the dashboard   
 class MyParticipations(APIView):
-    def get(self, request, user_id):
-        queryset = Participation.objects.filter(user_id=user_id)
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        queryset = Participation.objects.filter(user=request.user)
         serializer = ParticipationSerializer(queryset, many=True)
         return Response(serializer.data)
     
 
+class SignupUserView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get("username")
+        email = request.data.get("email")
+        password = request.data.get("password")
+
+        if not username or not password or not email:
+            return Response(
+                {"error": "Please provide a username, password, and email"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"error": "User Already exists"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user = User.objects.create_user(
+            username=username, email=email, password=password
+        )
+
+        return Response(
+            {"id":user.id, "username": user.username, "email": user.email},
+            status=status.HTTP_201_CREATED
+        )
+        

@@ -18,7 +18,7 @@ class Challenge(models.Model):
 class Participation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE, related_name='participations')
-    join_date = models.DateField('Join date')
+    join_date = models.DateField('Join date', auto_now_add=True)
 
     def __str__(self):
         return f'{self.user.username} - {self.challenge.title}'
