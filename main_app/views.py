@@ -161,6 +161,11 @@ class MyParticipations(APIView):
         serializer = ParticipationSerializer(queryset, many=True)
         return Response(serializer.data)
     
+class GetUsername(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"username": request.user.username}, status=status.HTTP_200_OK)
 
 class SignupUserView(APIView):
     permission_classes = [AllowAny]

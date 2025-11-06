@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ChallengeIndex, MyParticipations, ParticipationsIndex, MyChallenges, ParticipationProgress, ChallengeDetail, LeaveChallenge, Home, SignupUserView
+from .views import ChallengeIndex, MyParticipations, ParticipationsIndex, MyChallenges, ParticipationProgress, ChallengeDetail, LeaveChallenge, Home, SignupUserView, GetUsername
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -11,6 +11,7 @@ urlpatterns = [
     path('challenges/<int:challenge_id>/leave/', LeaveChallenge.as_view(), name='leave_challenge'),
     path('my-challenges/', MyChallenges.as_view(), name='my_challenges'),
     path('my-participations/', MyParticipations.as_view(), name='my_participations'),
+    path('username/', GetUsername.as_view(), name='get_username'),
     path('login/', TokenObtainPairView.as_view(), name='login'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('signup/', SignupUserView.as_view(), name='signup'),

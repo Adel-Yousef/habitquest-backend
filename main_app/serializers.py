@@ -1,6 +1,13 @@
 from rest_framework import serializers
 from .models import Challenge, Participation, Progress
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username']
 
 class ProgressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,7 +17,8 @@ class ProgressSerializer(serializers.ModelSerializer):
 
 class ParticipationSerializer(serializers.ModelSerializer):
     progress = ProgressSerializer(many=True, read_only=True)
-
+    challenge_title = serializers.CharField(source='challenge.title',read_only=True)
+    user = UserSerializer(read_only=True)
     class Meta:
         model = Participation
         fields = '__all__'
